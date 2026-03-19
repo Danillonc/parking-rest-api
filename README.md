@@ -71,14 +71,15 @@ Via Terminal (Maven):
 ./mvnw spring-boot:run
 
 ⚠️ Ponto de Atenção no Startup:
-Durante a inicialização, a aplicação fará uma chamada GET à API do Simulador para popular o banco de dados. Procure no seu console pela seguinte mensagem de sucesso:
+Durante a inicialização, a aplicação fará uma chamada GET à API do Simulador para popular o banco de dados. 
+Procure no seu console pela seguinte mensagem de sucesso:
 
 Sincronização concluída com sucesso. X setores e Y vagas carregadas.
 
 🧹 Troubleshooting: Limpeza do Banco de Dados
 Caso precise resetar o estado da aplicação (limpar tickets e garagens) sem precisar reiniciar todo o Docker Compose, execute este comando no terminal para recriar o banco de dados limpo:
 
-
+docker exec -it parking_mysql mysql -uroot -proot -e "DROP DATABASE parking_db; CREATE DATABASE parking_db;"
 
 🧪 Documentação da API e Testes Funcionais (cURL)
 Dispare os comandos abaixo no seu terminal (ou importe-os no Postman) para simular o ciclo de vida completo de um veículo.
