@@ -19,6 +19,4 @@ public class SpotEntity {
     private Double lat;
     private Double lng;
     private Boolean occupied = false;
-
-    // Getters, Setters, Construtores
 }

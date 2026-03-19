@@ -20,5 +20,4 @@ public class GarageEntity {
     private BigDecimal basePrice;
     private Integer maxCapacity;
 
-    // Getters, Setters, Construtores
 }

@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # 1. O Banco de Dados
+  mysql:
+    image: mysql:8.0
+    container_name: parking_mysql
+    environment:
+      MYSQL_DATABASE: parking_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # 2. O Kafka
+  kafka:
+    image: bitnamilegacy/kafka:3.5.0
+    container_name: parking_kafka
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    ports:
+      - "9094:9094"
+
+  # 3. O Kafka UI (Opcional, mas ótimo para a banca ver as mensagens)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: parking_kafka_ui
+    ports:
+      - "8080:8080" # Acesse http://localhost:8080 para ver as filas
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      - kafka
+
+  # 4. O Simulador da Estapar
+  simulator-api:
+    image: cfontes0estapar/garage-sim:1.0.0
+    container_name: parking_simulator
+    ports:
+      - "3000:3000"
+      - "3003:3003"
+    # O simulador só deve subir se o seu backend estiver de pé para receber o webhook
+    depends_on:
+      - backend-api
+
+  # 5. A Sua Aplicação Spring Boot
+  backend-api:
+    build: . # Aponta para o Dockerfile na raiz do projeto
+    container_name: parking_backend
+    ports:
+      - "8081:8080" # Expomos na 8081 para não conflitar com o Kafka UI
+    environment:
+      - DB_HOST=mysql # Injeta o nome do container do MySQL
+      - KAFKA_HOST=kafka # Injeta o nome do container do Kafka
+      - SIMULATOR_URL=http://simulator-api:3000 # URL interna do Docker para o simulador
+    depends_on:
+      mysql:
+        condition: service_healthy # Só sobe a app quando o banco estiver pronto para conexões
+      kafka:
+        condition: service_started

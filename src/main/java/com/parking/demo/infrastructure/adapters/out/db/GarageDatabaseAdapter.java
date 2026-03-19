@@ -11,6 +11,7 @@ import com.parking.demo.infrastructure.adapters.out.db.repository.GarageJpaRepos
 import com.parking.demo.infrastructure.adapters.out.db.repository.SpotJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,7 @@ public class GarageDatabaseAdapter implements GarageRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void markSpotAsOccupied(Long spotId) {
         SpotEntity spot = spotJpaRepository.findById(spotId)
                 .orElseThrow(() -> new SpotNotFoundException("Spot not found with id: " + spotId));
@@ -46,6 +48,7 @@ public class GarageDatabaseAdapter implements GarageRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void markSpotAsAvailable(Long spotId) {
         SpotEntity spot = spotJpaRepository.findById(spotId)
                 .orElseThrow(() -> new SpotNotFoundException("Spot not found with id: " + spotId));
@@ -54,7 +57,26 @@ public class GarageDatabaseAdapter implements GarageRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void syncGarageData(List<Garage> garages, List<Spot> spots) {
+        List<GarageEntity> garageEntities = garages.stream().map(g -> {
+            GarageEntity entity = new GarageEntity();
+            entity.setSector(g.sector());
+            entity.setBasePrice(g.basePrice());
+            entity.setMaxCapacity(g.maxCapacity());
+            return entity;
+        }).toList();
+        garageJpaRepository.saveAll(garageEntities);
 
+        List<SpotEntity> spotEntities = spots.stream().map(s -> {
+            SpotEntity entity = new SpotEntity();
+            entity.setId(s.id());
+            entity.setSector(s.sector());
+            entity.setLat(s.lat());
+            entity.setLng(s.lng());
+            entity.setOccupied(s.occupied());
+            return entity;
+        }).toList();
+        spotJpaRepository.saveAll(spotEntities);
     }
 }

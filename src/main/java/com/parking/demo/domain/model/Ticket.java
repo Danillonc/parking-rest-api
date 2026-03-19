@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record Ticket(
+        Long id,
         String licensePlate,
         String sector,
         LocalDateTime entryTime,
@@ -15,7 +16,7 @@ public record Ticket(
 ) {
     public enum Status { ENTRY, PARKED, EXIT }
 
-    public Ticket(String licensePlate, String sector, LocalDateTime entryTime, BigDecimal dynamicMultiplier, Status status) {
-        this(licensePlate, sector, entryTime, null, dynamicMultiplier, null, status, null);
+    public Ticket(Long id, String licensePlate, String sector, LocalDateTime entryTime, BigDecimal dynamicMultiplier, Status status) {
+        this(id, licensePlate, sector, entryTime, null, dynamicMultiplier, null, status, null);
     }
 }

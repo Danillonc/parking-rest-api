@@ -1,5 +1,7 @@
 package com.parking.demo.domain.strategy;
 
+import com.parking.demo.domain.exception.ParkingFullException;
+
 import java.math.BigDecimal;
 
 public class DynamicPricingStrategy {

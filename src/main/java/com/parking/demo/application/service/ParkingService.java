@@ -9,14 +9,12 @@ import com.parking.demo.domain.ports.out.GarageRepositoryPort;
 import com.parking.demo.domain.ports.out.TicketRepositoryPort;
 import com.parking.demo.domain.strategy.DynamicPricingStrategy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
-@Service
 public class ParkingService implements ManageParkingUseCase {
 
     private final TicketRepositoryPort ticketRepository;
@@ -25,16 +23,22 @@ public class ParkingService implements ManageParkingUseCase {
 
     @Transactional
     @Override
-    public void processEntry(String licensePlate, LocalDateTime entryTime) {
-        String sector = "A"; // Assumido via desafio
+    public void processEntry(String licensePlate, LocalDateTime entryTime, String sector) {
+        if (sector == null || sector.isBlank()) {
+            throw new IllegalArgumentException("O setor é obrigatório para registrar a entrada do veículo.");
+        }
+
+        ticketRepository.findActiveByLicensePlate(licensePlate).ifPresent(t -> {
+            throw new BusinessException("Veículo com a placa " + licensePlate + " já possui um ticket ativo.");
+        });
+
         Garage garage = garageRepository.getSectorInfo(sector);
 
         int currentOccupancy = ticketRepository.countActiveBySector(sector);
         BigDecimal multiplier = pricingStrategy.calculateMultiplier(currentOccupancy, garage.maxCapacity());
 
-        Ticket ticket = new Ticket(licensePlate, sector, entryTime, multiplier, Ticket.Status.ENTRY);
+        Ticket ticket = new Ticket(null, licensePlate, sector, entryTime, multiplier, Ticket.Status.ENTRY);
         ticketRepository.save(ticket);
-
     }
 
     @Transactional
@@ -47,6 +51,7 @@ public class ParkingService implements ManageParkingUseCase {
                 .orElseThrow(() -> new BusinessException("Spot not found or already occupied at the given location"));
 
         Ticket parkedTicket = new Ticket(
+                ticket.id(),
                 ticket.licensePlate(),
                 ticket.sector(),
                 ticket.entryTime(),
@@ -80,6 +85,7 @@ public class ParkingService implements ManageParkingUseCase {
         }
 
         Ticket exitedTicket = new Ticket(
+                ticket.id(),
                 ticket.licensePlate(),
                 ticket.sector(),
                 ticket.entryTime(),

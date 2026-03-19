@@ -44,6 +44,7 @@ public class TicketDatabaseAdapter implements TicketRepositoryPort {
 
     private TicketEntity toEntity(Ticket domain) {
         TicketEntity entity = new TicketEntity();
+        entity.setId(domain.id());
         entity.setLicensePlate(domain.licensePlate());
         entity.setSector(domain.sector());
         entity.setEntryTime(domain.entryTime());
@@ -56,6 +57,7 @@ public class TicketDatabaseAdapter implements TicketRepositoryPort {
 
     private Ticket toDomain(TicketEntity entity) {
         return new Ticket(
+                entity.getId(),
                 entity.getLicensePlate(),
                 entity.getSector(),
                 entity.getEntryTime(),
