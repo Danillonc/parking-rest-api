@@ -65,7 +65,7 @@ Passo 2: Iniciar a Aplicação (Backend)
 Você pode rodar a aplicação pela sua IDE ou via terminal.
 
 Via IDE (IntelliJ / Eclipse):
-Abra a classe GarageApplication.java e execute (Run/Play).
+Abra a classe DemoApplication.java e execute (Run/Play).
 
 Via Terminal (Maven):
 ./mvnw spring-boot:run
